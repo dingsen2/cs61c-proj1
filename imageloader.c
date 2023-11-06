@@ -32,13 +32,6 @@
 // 	}
 // }
 
-Color * read_next_color_ptr(FILE * fp) {
-	Color *ret_color_ptr = (Color *) malloc(sizeof(Color *));
-	fscanf(fp, "%hhu", &ret_color_ptr->R);
-	fscanf(fp, "%hhu", &ret_color_ptr->G);
-	fscanf(fp, "%hhu", &ret_color_ptr->B);
-	return ret_color_ptr;
-}
 
 void print_color(Color color) {
 	printf("%3d %3d %3d", color.R, color.G, color.B);
@@ -75,7 +68,7 @@ Image *readData(char *filename)
 	
     for (size_t i = 0; i < row_num; i++)
     {
-		image->image[i] = (Color *) malloc(sizeof(Color) * col_num);
+		image->image[i] = (Color *) malloc(col_num * sizeof(Color));
         if (NULL == image->image[i])
 		{
 			fprintf(stderr, "Memory allocation for image->image[%ld] failed", i);
@@ -84,8 +77,9 @@ Image *readData(char *filename)
 		
 		for (size_t j = 0; j < col_num; j++)
         {
-            Color *next_color_ptr = read_next_color_ptr(fp);
-			image->image[i][j] = *next_color_ptr;
+			fscanf(fp, "%hhd", &image->image[i][j].R);
+			fscanf(fp, "%hhd", &image->image[i][j].G);
+			fscanf(fp, "%hhd", &image->image[i][j].B);
         }
         
     }
@@ -119,10 +113,14 @@ void writeData(Image *image)
 void freeImage(Image *image)
 {
 	uint32_t row_num = image->rows;
-	// uint32_t col_num = image->cols;
+	uint32_t col_num = image->cols;
 	for (size_t i = 0; i < row_num; i++)
 	{
-		free(image->image[i]);	
+		free(image->image[i]);
+		image->image[i]=NULL;
 	}
+	free(image->image);
+	image->image = NULL;
 	free(image);
+	image=NULL;
 }
