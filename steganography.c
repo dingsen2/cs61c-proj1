@@ -19,15 +19,81 @@
 #include "imageloader.h"
 
 //Determines what color the cell at the given row/col should be. This should not affect Image, and should allocate space for a new Color.
-Color *evaluateOnePixel(Image *image, int row, int col)
-{
-	//YOUR CODE HERE
-}
+// Color *evaluateOnePixel(Image *image, int row, int col)
+// {
+// 	//YOUR CODE HERE
+// 	Color *ret_color	=	(Color *) malloc(sizeof(Color));
+// 	ret_color->R		=	image->image[row][col].R;
+// 	ret_color->G		=	image->image[row][col].G;
+// 	ret_color->B		= 	image->image[row][col].B;
+// 	return ret_color;
+// }
 
 //Given an image, creates a new image extracting the LSB of the B channel.
 Image *steganography(Image *image)
 {
 	//YOUR CODE HERE
+	
+	uint32_t image_row_num	=	image->rows;
+	uint32_t image_col_num	=	image->cols;
+	
+	Image *ret_image		=	malloc(sizeof(Image));
+	if (NULL == ret_image)
+	{
+		fprintf(stderr, "Memory allocation for ret_image failed");
+		exit(-1);
+	}
+	
+	ret_image->rows			=	image_row_num;
+	ret_image->cols			=	image_col_num;
+	ret_image->image		=	(Color **) malloc(image_row_num * sizeof(Color *));
+
+	for (size_t i = 0; i < image_row_num; i++)
+	{
+		ret_image->image[i] = (Color *) malloc(image_col_num * sizeof(Color));
+		if (NULL == ret_image->image[i]) 
+		{
+			fprintf(stderr, "Memory allocation for image->image[%ld] failed", i);
+			for (size_t m = 0; m < i; m++)
+			{
+				free(ret_image->image[m]);
+				ret_image->image[m] = NULL;
+			}
+			free(ret_image->image);
+			ret_image->image = NULL;
+			exit(-1);
+		}
+		
+		for (size_t j = 0; j < image_col_num; j++)
+		{
+			// ret_image->image[i] + j = evaluateOnePixel(ret_image->image, i, j);
+			Color candidate_color;
+			candidate_color.R = 0;
+			candidate_color.G = 0;
+			candidate_color.B = 0;
+
+			Color original_color = image->image[i][j];
+			uint8_t last_bit = original_color.B & 1;
+			if (last_bit == 1)
+			{
+				candidate_color.R = 255;
+				candidate_color.G = 255;
+				candidate_color.B = 255;
+			}
+			ret_image->image[i][j] = candidate_color;
+		}
+	}
+	return ret_image;
+}
+
+void processCLI(int argc, char **argv, char **filename) 
+{
+	if (argc != 2) {
+		printf("usage: %s filename\n",argv[0]);
+		printf("filename is an ASCII PPM file (type P3) with maximum value 255.\n");
+		exit(-1);
+	}
+	*filename = argv[1];
 }
 
 /*
@@ -46,4 +112,11 @@ Make sure to free all memory before returning!
 int main(int argc, char **argv)
 {
 	//YOUR CODE HERE
+	char *filename;
+	processCLI(argc, argv, &filename);
+	Image *original_image	=	readData(filename);
+	Image *result_image		=	steganography(original_image);
+	writeData(result_image);
+	freeImage(original_image);
+	freeImage(result_image);
 }

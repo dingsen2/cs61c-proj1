@@ -63,7 +63,7 @@ Image *readData(char *filename)
 	if (NULL == image->image)
 	{
 		fprintf(stderr, "Memory allocation for image->image failed");
-		return NULL;
+		exit(-1);
 	}
 	
     for (size_t i = 0; i < row_num; i++)
@@ -72,7 +72,12 @@ Image *readData(char *filename)
         if (NULL == image->image[i])
 		{
 			fprintf(stderr, "Memory allocation for image->image[%ld] failed", i);
-			return NULL;
+			for (size_t m = 0; m < i; m++)
+			{
+				free(image->image[m]);
+			}
+			free(image->image);
+			exit(-1);
 		}
 		
 		for (size_t j = 0; j < col_num; j++)
@@ -113,7 +118,7 @@ void writeData(Image *image)
 void freeImage(Image *image)
 {
 	uint32_t row_num = image->rows;
-	uint32_t col_num = image->cols;
+	// uint32_t col_num = image->cols;
 	for (size_t i = 0; i < row_num; i++)
 	{
 		free(image->image[i]);
