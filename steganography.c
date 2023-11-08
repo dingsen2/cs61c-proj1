@@ -19,15 +19,24 @@
 #include "imageloader.h"
 
 //Determines what color the cell at the given row/col should be. This should not affect Image, and should allocate space for a new Color.
-// Color *evaluateOnePixel(Image *image, int row, int col)
-// {
-// 	//YOUR CODE HERE
-// 	Color *ret_color	=	(Color *) malloc(sizeof(Color));
-// 	ret_color->R		=	image->image[row][col].R;
-// 	ret_color->G		=	image->image[row][col].G;
-// 	ret_color->B		= 	image->image[row][col].B;
-// 	return ret_color;
-// }
+Color *evaluateOnePixel(Image *image, int row, int col)
+{
+	//YOUR CODE HERE
+	Color *ret_color	=	(Color *) malloc(sizeof(Color));
+	ret_color->R 		= 	0;
+	ret_color->G 		= 	0;
+	ret_color->B 		= 	0;
+
+	Color original_color = image->image[row][col];
+	uint8_t last_bit = original_color.B & 1;
+	if (last_bit == 1)
+	{
+		ret_color->R = 255;
+		ret_color->G = 255;
+		ret_color->B = 255;
+	}
+	return ret_color;
+}
 
 //Given an image, creates a new image extracting the LSB of the B channel.
 Image *steganography(Image *image)
@@ -57,7 +66,7 @@ Image *steganography(Image *image)
 			for (size_t m = 0; m < i; m++)
 			{
 				free(ret_image->image[m]);
-				ret_image->image[m] = NULL;
+				ret_image->image[m]	= NULL;
 			}
 			free(ret_image->image);
 			ret_image->image = NULL;
@@ -66,21 +75,10 @@ Image *steganography(Image *image)
 		
 		for (size_t j = 0; j < image_col_num; j++)
 		{
-			// ret_image->image[i] + j = evaluateOnePixel(ret_image->image, i, j);
-			Color candidate_color;
-			candidate_color.R = 0;
-			candidate_color.G = 0;
-			candidate_color.B = 0;
-
-			Color original_color = image->image[i][j];
-			uint8_t last_bit = original_color.B & 1;
-			if (last_bit == 1)
-			{
-				candidate_color.R = 255;
-				candidate_color.G = 255;
-				candidate_color.B = 255;
-			}
-			ret_image->image[i][j] = candidate_color;
+			Color *ret_color 		=	evaluateOnePixel(image, i, j);
+			ret_image->image[i][j] 	=	*ret_color;
+			free(ret_color);
+			ret_color				=	NULL;
 		}
 	}
 	return ret_image;
